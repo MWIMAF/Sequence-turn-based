@@ -1,0 +1,16 @@
+{
+    "name": "Game.AI",
+    "rootNamespace": "Game.AI",
+    "references": [
+        "Game.Combat"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

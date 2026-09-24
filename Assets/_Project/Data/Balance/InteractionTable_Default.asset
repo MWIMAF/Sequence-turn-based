@@ -1,0 +1,190 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7285bf85e6c7444faa6eee9206180ee1, type: 3}
+  m_Name: InteractionTable_Default
+  m_EditorClassIdentifier: Game.Combat::Game.Combat.InteractionTable
+  _rules:
+  - _self: 1
+    _opponent: 1
+    _damage: 1
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Trade
+  - _self: 1
+    _opponent: 2
+    _damage: 2
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Blocked
+  - _self: 1
+    _opponent: 3
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Parried
+  - _self: 1
+    _opponent: 4
+    _damage: 1
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Hit
+  - _self: 1
+    _opponent: 0
+    _damage: 1
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Hit
+  - _self: 2
+    _opponent: 1
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Guard
+  - _self: 2
+    _opponent: 2
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Standoff
+  - _self: 2
+    _opponent: 3
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Guard
+  - _self: 2
+    _opponent: 4
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Guard wasted
+  - _self: 2
+    _opponent: 0
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Guard wasted
+  - _self: 3
+    _opponent: 1
+    _damage: 1
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 1
+    _label: Parry!
+  - _self: 3
+    _opponent: 2
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 2
+    _opponentStatus: 0
+    _label: Whiff
+  - _self: 3
+    _opponent: 3
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 2
+    _opponentStatus: 0
+    _label: Whiff
+  - _self: 3
+    _opponent: 4
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 2
+    _opponentStatus: 0
+    _label: Whiff
+  - _self: 3
+    _opponent: 0
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 2
+    _opponentStatus: 0
+    _label: Whiff
+  - _self: 4
+    _opponent: 1
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Hit while charging
+  - _self: 4
+    _opponent: 2
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Applied
+  - _self: 4
+    _opponent: 3
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Applied
+  - _self: 4
+    _opponent: 4
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Applied
+  - _self: 4
+    _opponent: 0
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Applied
+  - _self: 0
+    _opponent: 1
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Idle
+  - _self: 0
+    _opponent: 2
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Idle
+  - _self: 0
+    _opponent: 3
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Idle
+  - _self: 0
+    _opponent: 4
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Idle
+  - _self: 0
+    _opponent: 0
+    _damage: 0
+    _moveEffectApplies: 1
+    _selfStatus: 0
+    _opponentStatus: 0
+    _label: Idle
