@@ -9,10 +9,13 @@ namespace Game.Combat
     /// </summary>
     /// <remarks>
     /// Sequences must already be validated and paid for (TurnController.LockIn does both).
-    /// No randomness is used here: the same state and sequences always give the same result.
+    /// The only randomness is crit rolls, from the fight's seeded RNG: the same seed and sequences
+    /// always give the same result. Clash outcomes themselves never roll dice.
     /// </remarks>
     public sealed class SequenceResolver
     {
+        private const int PercentRoll = 100;
+
         private readonly InteractionTable _table;
         private readonly BalanceConfig _balance;
 
@@ -23,7 +26,7 @@ namespace Game.Combat
 
             if (_balance.IdleMove == null)
             {
-                throw new ArgumentException("BalanceConfig needs an Idle Move for empty and cancelled slots.", nameof(balance));
+                throw new ArgumentException("BalanceConfig needs an Idle Move for empty slots.", nameof(balance));
             }
         }
 
@@ -71,41 +74,41 @@ namespace Game.Combat
             int turn = state.TurnNumber;
             var player = state.Player;
             var enemy = state.Enemy;
+            int defenseConstant = _balance.DefenseConstantFor(state.EnemyTier);
 
-            // 1. Staggered cancels this slot's move before anything clashes.
-            var playerMove = EffectiveMove(player, playerPlanned, turn, slot, events);
-            var enemyMove = EffectiveMove(enemy, enemyPlanned, turn, slot, events);
+            var playerMove = Sequence.IsEmptySlot(playerPlanned) ? _balance.IdleMove : playerPlanned;
+            var enemyMove = Sequence.IsEmptySlot(enemyPlanned) ? _balance.IdleMove : enemyPlanned;
 
-            // 2. Each side's rule says what its own move does to the other.
+            // 1. Each side's rule says what its own move does to the other.
             var playerRule = _table.Get(playerMove.Type, enemyMove.Type);
             var enemyRule = _table.Get(enemyMove.Type, playerMove.Type);
 
-            // 3. Damage is computed for both sides before either is applied: the clash is simultaneous.
-            int toEnemy = BaseDamage(playerRule, playerMove, enemyMove);
-            int toPlayer = BaseDamage(enemyRule, enemyMove, playerMove);
-            int enemyExposedBonus = ExposedBonus(enemy, toEnemy);
-            int playerExposedBonus = ExposedBonus(player, toPlayer);
-            toEnemy += enemyExposedBonus;
-            toPlayer += playerExposedBonus;
+            // 2. Damage for both sides is computed before either is applied: the clash is simultaneous.
+            //    Stagger is read now, so a Stagger caused in this slot only affects the next one.
+            var toEnemy = ComputeDamage(state, player, enemy, playerMove, playerRule, defenseConstant);
+            var toPlayer = ComputeDamage(state, enemy, player, enemyMove, enemyRule, defenseConstant);
+            enemy.ApplyDamage(toEnemy.Total);
+            player.ApplyDamage(toPlayer.Total);
 
-            enemy.ApplyDamage(toEnemy);
-            player.ApplyDamage(toPlayer);
-
-            // 4. Move effects (stamina gain from Guard / Charge).
+            // 3. Move effects (stamina gain, heal). Utility still applies when hit, unless that hit was a knockout.
             int playerGain = playerRule.MoveEffectApplies ? player.GainStamina(playerMove.StaminaGain) : 0;
             int enemyGain = enemyRule.MoveEffectApplies ? enemy.GainStamina(enemyMove.StaminaGain) : 0;
+            int playerHealed = playerRule.MoveEffectApplies ? player.Heal(playerMove.Heal) : 0;
+            int enemyHealed = enemyRule.MoveEffectApplies ? enemy.Heal(enemyMove.Heal) : 0;
 
             events.Add(new ClashResolvedEvent(turn, slot,
                 new SlotOutcome(CombatantId.Player, playerMove, enemyMove.Type, playerRule.Label,
-                    toEnemy, toPlayer, playerExposedBonus, playerGain, player.Hp, player.Stamina),
+                    toEnemy.Total, toEnemy.IsCrit, toPlayer.Total, toPlayer.StaggerBonus,
+                    playerHealed, playerGain, player.Hp, player.Stamina),
                 new SlotOutcome(CombatantId.Enemy, enemyMove, playerMove.Type, enemyRule.Label,
-                    toPlayer, toEnemy, enemyExposedBonus, enemyGain, enemy.Hp, enemy.Stamina)));
+                    toPlayer.Total, toPlayer.IsCrit, toEnemy.Total, toEnemy.StaggerBonus,
+                    enemyHealed, enemyGain, enemy.Hp, enemy.Stamina)));
 
-            // 5. Statuses that were active this slot count down.
+            // 4. Statuses that were active this slot count down.
             ExpireStatuses(player, turn, slot, events);
             ExpireStatuses(enemy, turn, slot, events);
 
-            // 6. Statuses caused by this clash switch on for the next slot (or next turn's slot 1).
+            // 5. Statuses caused by this clash switch on for the next slot (or next turn's slot 1).
             QueueStatus(player, playerRule.SelfStatus, turn, slot, events);
             QueueStatus(enemy, playerRule.OpponentStatus, turn, slot, events);
             QueueStatus(enemy, enemyRule.SelfStatus, turn, slot, events);
@@ -113,7 +116,7 @@ namespace Game.Combat
             player.PromotePendingStatuses();
             enemy.PromotePendingStatuses();
 
-            // 7. A knockout ends the fight; later slots don't resolve.
+            // 6. A knockout ends the fight; later slots don't resolve.
             if (player.IsDefeated)
             {
                 events.Add(new CombatantDefeatedEvent(turn, slot, CombatantId.Player));
@@ -125,45 +128,17 @@ namespace Game.Combat
             }
         }
 
-        private MoveDefinition EffectiveMove(CombatantState who, MoveDefinition planned, int turn, int slot,
-            List<CombatEvent> events)
+        private DamageResult ComputeDamage(CombatState state, CombatantState attacker, CombatantState target,
+            MoveDefinition move, InteractionRule rule, int defenseConstant)
         {
-            if (Sequence.IsEmptySlot(planned))
+            if (rule.Damage != DamageMode.Full)
             {
-                return _balance.IdleMove;
+                return DamageResult.None;
             }
 
-            if (who.HasActive(StatusType.Staggered))
-            {
-                events.Add(new MoveCancelledEvent(turn, slot, who.Id, planned, StatusType.Staggered));
-                return _balance.IdleMove;
-            }
-
-            return planned;
-        }
-
-        private static int BaseDamage(InteractionRule rule, MoveDefinition own, MoveDefinition opponent)
-        {
-            switch (rule.Damage)
-            {
-                case DamageMode.Full:
-                    return own.Power;
-                case DamageMode.ReducedByOpponentPower:
-                    return Math.Max(0, own.Power - opponent.Power);
-                default:
-                    return 0;
-            }
-        }
-
-        private int ExposedBonus(CombatantState target, int incomingDamage)
-        {
-            if (incomingDamage <= 0 || !target.HasActive(StatusType.Exposed))
-            {
-                return 0;
-            }
-
-            // Integer percent, rounded down, so HP stays an int.
-            return incomingDamage * _balance.ExposedDamageBonusPercent / 100;
+            bool isCrit = attacker.CritChancePercent > 0 && state.Rng.Next(PercentRoll) < attacker.CritChancePercent;
+            bool staggered = target.HasActive(StatusType.Staggered);
+            return DamageCalculator.Compute(attacker, target, move, isCrit, staggered, defenseConstant, _balance);
         }
 
         private static void ExpireStatuses(CombatantState who, int turn, int slot, List<CombatEvent> events)

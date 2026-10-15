@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd32fb3f52897437c87e0f69ec2e40e4, type: 3}
+  m_Name: Player_Default
+  m_EditorClassIdentifier: Game.Combat::Game.Combat.PlayerDefinition
+  _displayName: You
+  _stats:
+    _maxHp: 24
+    _attack: 3
+    _defense: 4
+    _critChancePercent: 10
+    _critMultiplierPercent: 150
+    _attackBuffPercent: 0
+    _maxStamina: 8
+    _startingStamina: 4
+  _loadout:
+  - _bodyPart: 0
+    _equipment: {fileID: 11400000, guid: 6cc126736794d49a8a0aed9b607bf1aa, type: 2}
+    _action: {fileID: 11400000, guid: 5f79cd41e9ae54449a3c480716b07a72, type: 2}
+  - _bodyPart: 1
+    _equipment: {fileID: 11400000, guid: 1874b76d9c4824fcbaa96b2cae4b6c34, type: 2}
+    _action: {fileID: 11400000, guid: 71c74516661da4bb7a662a40f61879a3, type: 2}
+  - _bodyPart: 2
+    _equipment: {fileID: 11400000, guid: 3900098c269914b769e9c7ecd608bdf6, type: 2}
+    _action: {fileID: 11400000, guid: 475916abb991448ccbdf2e4c7d4ca474, type: 2}
+  - _bodyPart: 3
+    _equipment: {fileID: 11400000, guid: 22d070880627846ac8a78d82b2eb6e2f, type: 2}
+    _action: {fileID: 11400000, guid: 0abe4e81c27c84c0fb3ca309d859ab9e, type: 2}
+  - _bodyPart: 4
+    _equipment: {fileID: 11400000, guid: 22d070880627846ac8a78d82b2eb6e2f, type: 2}
+    _action: {fileID: 11400000, guid: 61f83880858e740df8226980141f2e11, type: 2}

@@ -1,7 +1,7 @@
 namespace Game.Combat
 {
     /// <summary>
-    /// Stamina changed outside a clash. (Stamina gained from Guard/Charge is reported in SlotOutcome.)
+    /// Stamina changed outside a clash. (Stamina gained from moves like Evade/Rest is reported in SlotOutcome.)
     /// </summary>
     public sealed class StaminaChangedEvent : CombatEvent
     {

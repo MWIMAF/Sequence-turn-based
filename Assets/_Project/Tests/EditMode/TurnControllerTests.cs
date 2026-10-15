@@ -12,7 +12,7 @@ namespace Game.Combat.Tests
         {
             using (var w = new TestWorld())
             {
-                var planner = new ScriptedPlanner(Seq(w.Guard, w.Guard, w.Guard));
+                var planner = new ScriptedPlanner(Seq(w.Slash, w.Slash, w.Parry));
                 var controller = new TurnController(w.State, w.Balance, w.Table, planner);
 
                 controller.BeginTurn();
@@ -24,14 +24,54 @@ namespace Game.Combat.Tests
         }
 
         [Test]
-        public void LockIn_RejectsASequenceThePlayerCantAfford_AndChangesNothing()
+        public void LockIn_RejectsAnActionNotInTheLoadout()
         {
-            using (var w = new TestWorld(startingStamina: SlashCost + 1))
+            using (var w = new TestWorld())
             {
-                var controller = new TurnController(w.State, w.Balance, w.Table, new ScriptedPlanner(Seq(w.Guard, w.Guard, w.Guard)));
+                var controller = w.Controller(Seq(null, null, null));
                 controller.BeginTurn();
 
-                var result = controller.LockIn(Seq(w.Slash, w.Slash, w.Guard));
+                var result = controller.LockIn(Seq(w.Bash, null, null));
+
+                Assert.That(result.Validation.Error, Is.EqualTo(SequenceValidationError.ActionNotAvailable));
+            }
+        }
+
+        [Test]
+        public void LockIn_RejectsUsingTheSameLoadoutActionTwice()
+        {
+            using (var w = new TestWorld(stamina: 10))
+            {
+                var controller = w.Controller(Seq(null, null, null));
+                controller.BeginTurn();
+
+                var result = controller.LockIn(Seq(w.Slash, w.Slash, null));
+
+                Assert.That(result.Validation.Error, Is.EqualTo(SequenceValidationError.ActionNotAvailable));
+            }
+        }
+
+        [Test]
+        public void LockIn_AllowsTheSameMoveTwice_WhenTwoBodyPartsGiveIt()
+        {
+            using (var w = new TestWorld(stamina: 10, twoSwords: true))
+            {
+                var controller = w.Controller(Seq(null, null, null));
+                controller.BeginTurn();
+
+                Assert.That(controller.LockIn(Seq(w.Slash, w.Slash, w.Rest)).Accepted, Is.True);
+            }
+        }
+
+        [Test]
+        public void LockIn_RejectsASequenceThePlayerCantAfford_AndChangesNothing()
+        {
+            using (var w = new TestWorld(stamina: SlashCost + 1))
+            {
+                var controller = w.Controller(Seq(null, null, null));
+                controller.BeginTurn();
+
+                var result = controller.LockIn(Seq(w.Slash, w.Parry, null));
 
                 Assert.That(result.Accepted, Is.False);
                 Assert.That(result.Validation.Error, Is.EqualTo(SequenceValidationError.NotEnoughStamina));
@@ -41,20 +81,35 @@ namespace Game.Combat.Tests
         }
 
         [Test]
-        public void LockIn_PaysUpFront_ThenGuardGainsArriveDuringResolution()
+        public void LockIn_PaysUpFront_ThenEvadeAndRestGainsArriveDuringResolution()
         {
-            using (var w = new TestWorld(startingStamina: 4))
+            using (var w = new TestWorld(stamina: 5))
             {
-                var controller = new TurnController(w.State, w.Balance, w.Table, new ScriptedPlanner(Seq(w.Guard, w.Guard, w.Guard)));
+                var controller = w.Controller(Seq(null, null, null));
                 controller.BeginTurn();
 
-                var result = controller.LockIn(Seq(w.Slash, w.Guard, w.Guard));
+                var result = controller.LockIn(Seq(w.Slash, w.Evade, w.Rest));
 
                 Assert.That(result.Accepted, Is.True);
-                var paid = result.Events.OfType<StaminaChangedEvent>().Single(e => e.Who == CombatantId.Player);
+                var paid = result.Events.OfType<StaminaChangedEvent>().Single();
+                Assert.That(paid.Who, Is.EqualTo(CombatantId.Player));
                 Assert.That(paid.Delta, Is.EqualTo(-SlashCost));
-                Assert.That(paid.StaminaAfter, Is.EqualTo(4 - SlashCost));
-                Assert.That(w.Player.Stamina, Is.EqualTo(4 - SlashCost + 2 * GuardGain));
+                Assert.That(w.Player.Stamina, Is.EqualTo(5 - SlashCost + EvadeGain + RestGain));
+            }
+        }
+
+        [Test]
+        public void Enemy_PaysNoStamina_ForItsPattern()
+        {
+            using (var w = new TestWorld(stamina: 0))
+            {
+                var controller = w.Controller(Seq(w.Slash, w.Slash, w.Parry));
+                Assert.DoesNotThrow(() => controller.BeginTurn());
+
+                var result = controller.LockIn(Seq(w.Evade, w.Rest, null));
+
+                Assert.That(result.Accepted, Is.True);
+                Assert.That(result.Events.OfType<StaminaChangedEvent>().Any(e => e.Who == CombatantId.Enemy), Is.False);
             }
         }
 
@@ -63,10 +118,10 @@ namespace Game.Combat.Tests
         {
             using (var w = new TestWorld(allowEmptySlots: false))
             {
-                var controller = new TurnController(w.State, w.Balance, w.Table, new ScriptedPlanner(Seq(w.Guard, w.Guard, w.Guard)));
+                var controller = w.Controller(Seq(w.Slash, w.Slash, w.Slash));
                 controller.BeginTurn();
 
-                var result = controller.LockIn(Seq(w.Guard, null, w.Guard));
+                var result = controller.LockIn(Seq(w.Evade, null, w.Rest));
 
                 Assert.That(result.Validation.Error, Is.EqualTo(SequenceValidationError.EmptySlotNotAllowed));
             }
@@ -77,12 +132,11 @@ namespace Game.Combat.Tests
         {
             using (var w = new TestWorld())
             {
-                var controller = new TurnController(w.State, w.Balance, w.Table, new ScriptedPlanner(Seq(w.Guard, w.Guard, w.Guard)));
+                var controller = w.Controller(Seq(null, null, null));
                 controller.BeginTurn();
 
-                var result = controller.LockIn(Seq(w.Guard, w.Guard));
-
-                Assert.That(result.Validation.Error, Is.EqualTo(SequenceValidationError.WrongSlotCount));
+                Assert.That(controller.LockIn(Seq(w.Evade, w.Rest)).Validation.Error,
+                    Is.EqualTo(SequenceValidationError.WrongSlotCount));
             }
         }
 
@@ -91,11 +145,10 @@ namespace Game.Combat.Tests
         {
             using (var w = new TestWorld())
             {
-                var controller = new TurnController(w.State, w.Balance, w.Table,
-                    new ScriptedPlanner(Seq(w.Guard, w.Guard, w.Guard), Seq(w.Guard, w.Guard, w.Guard)));
+                var controller = w.Controller(Seq(null, null, null), Seq(null, null, null));
 
                 controller.BeginTurn();
-                controller.LockIn(Seq(w.Guard, w.Guard, w.Guard));
+                controller.LockIn(Seq(w.Evade, w.Rest, null));
                 Assert.That(controller.Phase, Is.EqualTo(TurnPhase.Playback));
 
                 controller.CompletePlayback();
@@ -110,11 +163,11 @@ namespace Game.Combat.Tests
         [Test]
         public void FightEnds_InCombatOver_AfterAKnockout()
         {
-            using (var w = new TestWorld(hp: SlashPower))
+            using (var w = new TestWorld(hp: SlashHit))
             {
-                var controller = new TurnController(w.State, w.Balance, w.Table, new ScriptedPlanner(Seq(w.Charge, w.Charge, w.Charge)));
+                var controller = w.Controller(Seq(w.Rest, w.Rest, w.Rest));
                 controller.BeginTurn();
-                controller.LockIn(Seq(w.Slash, w.Guard, w.Guard));
+                controller.LockIn(Seq(w.Slash, null, null));
                 controller.CompletePlayback();
 
                 Assert.That(controller.Phase, Is.EqualTo(TurnPhase.CombatOver));
@@ -123,26 +176,25 @@ namespace Game.Combat.Tests
         }
 
         [Test]
-        public void PassiveRegen_IsAppliedAtTurnStart_WhenConfigured()
+        public void PassiveRegen_OnlyAppliesToThePlayer()
         {
-            using (var w = new TestWorld(startingStamina: 0, passiveRegen: 2))
+            using (var w = new TestWorld(stamina: 0, passiveRegen: 2))
             {
-                var controller = new TurnController(w.State, w.Balance, w.Table, new ScriptedPlanner(Seq(w.Guard, w.Guard, w.Guard)));
+                var controller = w.Controller(Seq(null, null, null));
 
                 var events = controller.BeginTurn();
 
                 Assert.That(w.Player.Stamina, Is.EqualTo(2));
-                Assert.That(events.OfType<StaminaChangedEvent>().Count(), Is.EqualTo(2));
+                Assert.That(events.OfType<StaminaChangedEvent>().Single().Who, Is.EqualTo(CombatantId.Player));
             }
         }
 
         [Test]
         public void InvalidEnemyPlan_IsCaughtAtPlanning()
         {
-            using (var w = new TestWorld(startingStamina: 0))
+            using (var w = new TestWorld())
             {
-                var controller = new TurnController(w.State, w.Balance, w.Table, new ScriptedPlanner(Seq(w.Slash, w.Slash, w.Slash)));
-
+                var controller = w.Controller(Seq(w.Slash, w.Slash));
                 Assert.Throws<InvalidOperationException>(() => controller.BeginTurn());
             }
         }
@@ -152,9 +204,9 @@ namespace Game.Combat.Tests
         {
             using (var w = new TestWorld())
             {
-                var controller = new TurnController(w.State, w.Balance, w.Table, new ScriptedPlanner(Seq(w.Guard, w.Guard, w.Guard)));
+                var controller = w.Controller(Seq(null, null, null));
 
-                Assert.Throws<InvalidOperationException>(() => controller.LockIn(Seq(w.Guard, w.Guard, w.Guard)));
+                Assert.Throws<InvalidOperationException>(() => controller.LockIn(Seq(null, null, null)));
                 Assert.Throws<InvalidOperationException>(() => controller.CompletePlayback());
             }
         }

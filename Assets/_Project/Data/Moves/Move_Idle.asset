@@ -15,8 +15,10 @@ MonoBehaviour:
   _id: Idle
   _displayName: Idle
   _moveType: 0
+  _damageKind: 0
   _staminaCost: 0
-  _power: 0
+  _skillPower: 0
   _staminaGain: 0
+  _heal: 0
   _tags: []
   _icon: {fileID: 0}

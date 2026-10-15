@@ -15,8 +15,10 @@ MonoBehaviour:
   _id: Slash
   _displayName: Slash
   _moveType: 1
+  _damageKind: 0
   _staminaCost: 2
-  _power: 4
+  _skillPower: 3
   _staminaGain: 0
+  _heal: 0
   _tags: []
   _icon: {fileID: 0}

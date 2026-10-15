@@ -15,11 +15,11 @@ MonoBehaviour:
   _slotCount: 3
   _allowEmptySlots: 1
   _idleMove: {fileID: 11400000, guid: 1e31950c7220a4acca1264d85c69aa02, type: 2}
-  _playerMaxHp: 20
-  _playerStartingStamina: 4
-  _maxStamina: 10
   _passiveStaminaRegenPerTurn: 0
-  _exposedDamageBonusPercent: 50
+  _staggerDamageBonusPercent: 30
   _staggeredDurationSlots: 1
-  _exposedDurationSlots: 1
   _statusesCarryAcrossTurns: 1
+  _defenseConstantNormal: 50
+  _defenseConstantAlpha: 75
+  _defenseConstantBoss: 100
+  _minimumDamage: 1

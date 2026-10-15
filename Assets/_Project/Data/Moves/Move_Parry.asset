@@ -15,8 +15,10 @@ MonoBehaviour:
   _id: Parry
   _displayName: Parry
   _moveType: 3
+  _damageKind: 0
   _staminaCost: 2
-  _power: 3
+  _skillPower: 0
   _staminaGain: 0
+  _heal: 0
   _tags: []
   _icon: {fileID: 0}

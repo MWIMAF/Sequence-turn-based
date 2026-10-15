@@ -16,8 +16,6 @@ namespace Game.Editor
             {
                 case ClashResolvedEvent clash:
                     return slot + $"{Side(clash.Player)}  vs  {Side(clash.Enemy)}";
-                case MoveCancelledEvent cancel:
-                    return slot + $"{cancel.Who}'s {cancel.CancelledMove.DisplayName} is cancelled ({cancel.Cause})";
                 case StatusAppliedEvent applied:
                     return slot + $"{applied.Who} becomes {applied.Status} (next {applied.DurationSlots} slot(s))";
                 case StatusExpiredEvent expired:
@@ -46,14 +44,17 @@ namespace Game.Editor
         {
             var sb = new StringBuilder();
             sb.Append($"{o.Who} {o.Move.DisplayName} [{o.Label}]");
+            if (o.LandedCrit) sb.Append(" CRIT");
             if (o.DamageTaken > 0)
             {
                 sb.Append($" -{o.DamageTaken}HP");
-                if (o.ExposedBonusTaken > 0) sb.Append($" (incl. +{o.ExposedBonusTaken} Exposed)");
+                if (o.StaggerBonusTaken > 0) sb.Append($" (incl. +{o.StaggerBonusTaken} Stagger)");
             }
 
+            if (o.Healed > 0) sb.Append($" +{o.Healed}HP");
             if (o.StaminaGained > 0) sb.Append($" +{o.StaminaGained}STA");
-            sb.Append($" → {o.HpAfter}HP/{o.StaminaAfter}STA");
+            sb.Append($" → {o.HpAfter}HP");
+            if (o.Who == CombatantId.Player) sb.Append($"/{o.StaminaAfter}STA");
             return sb.ToString();
         }
     }

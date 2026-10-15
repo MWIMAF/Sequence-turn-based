@@ -7,10 +7,9 @@ namespace Game.Combat
     {
         None = 0,
 
-        /// <summary>The combatant's next slot is cancelled (becomes Idle). Caused by getting parried.</summary>
+        /// <summary>
+        /// Takes extra damage (BalanceConfig.StaggerDamageBonusPercent) in the next slot. Caused by getting parried.
+        /// </summary>
         Staggered = 1,
-
-        /// <summary>The combatant takes bonus damage in the next slot. Caused by a whiffed parry.</summary>
-        Exposed = 2,
     }
 }

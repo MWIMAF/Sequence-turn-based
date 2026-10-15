@@ -1,7 +1,9 @@
+using System.Collections.Generic;
+
 namespace Game.Combat
 {
     /// <summary>
-    /// Checks a sequence can be locked in. Used for the player's plan and to catch buggy enemy planners.
+    /// Checks a sequence can be locked in. Used for the player's plan and to catch broken enemy patterns.
     /// </summary>
     public static class SequenceValidator
     {
@@ -22,17 +24,23 @@ namespace Game.Combat
                     if (Sequence.IsEmptySlot(sequence[slot]))
                     {
                         return new SequenceValidationResult(
-                            SequenceValidationError.EmptySlotNotAllowed,
-                            $"Slot {slot + 1} is empty.");
+                            SequenceValidationError.EmptySlotNotAllowed, $"Slot {slot + 1} is empty.");
                     }
                 }
             }
 
+            var unavailable = FindUnavailableAction(sequence, owner.AvailableActions);
+            if (unavailable != null)
+            {
+                return new SequenceValidationResult(
+                    SequenceValidationError.ActionNotAvailable,
+                    $"{unavailable.DisplayName} isn't available (each loadout action can be used once per turn).");
+            }
+
             // Stamina is paid up front for the whole sequence, so stamina gained mid-turn
-            // (Guard, Charge) can only be spent next turn. This keeps the budget readable:
-            // the opponent's current stamina caps how many costly moves they can have planned.
+            // (Evade, Rest) can only be spent next turn. Enemies don't use stamina.
             int cost = sequence.TotalStaminaCost;
-            if (cost > owner.Stamina)
+            if (owner.UsesStamina && cost > owner.Stamina)
             {
                 return new SequenceValidationResult(
                     SequenceValidationError.NotEnoughStamina,
@@ -40,6 +48,35 @@ namespace Game.Combat
             }
 
             return SequenceValidationResult.Valid;
+        }
+
+        /// <summary>
+        /// GDD: the player picks 3 of their 5 loadout actions. Each copy in the loadout can fill one slot,
+        /// so two Swords allow Slash twice, one Sword allows it once.
+        /// </summary>
+        private static MoveDefinition FindUnavailableAction(Sequence sequence, IReadOnlyList<MoveDefinition> available)
+        {
+            if (available == null)
+            {
+                return null;
+            }
+
+            var remaining = new List<MoveDefinition>(available);
+            for (int slot = 0; slot < sequence.Count; slot++)
+            {
+                var move = sequence[slot];
+                if (Sequence.IsEmptySlot(move))
+                {
+                    continue;
+                }
+
+                if (!remaining.Remove(move))
+                {
+                    return move;
+                }
+            }
+
+            return null;
         }
     }
 }

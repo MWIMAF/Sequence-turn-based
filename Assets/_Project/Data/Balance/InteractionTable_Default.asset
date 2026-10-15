@@ -22,11 +22,11 @@ MonoBehaviour:
     _label: Trade
   - _self: 1
     _opponent: 2
-    _damage: 2
+    _damage: 0
     _moveEffectApplies: 1
     _selfStatus: 0
     _opponentStatus: 0
-    _label: Blocked
+    _label: Dodged
   - _self: 1
     _opponent: 3
     _damage: 0
@@ -54,38 +54,38 @@ MonoBehaviour:
     _moveEffectApplies: 1
     _selfStatus: 0
     _opponentStatus: 0
-    _label: Guard
+    _label: Dodge!
   - _self: 2
     _opponent: 2
     _damage: 0
     _moveEffectApplies: 1
     _selfStatus: 0
     _opponentStatus: 0
-    _label: Standoff
+    _label: Nothing
   - _self: 2
     _opponent: 3
     _damage: 0
     _moveEffectApplies: 1
     _selfStatus: 0
     _opponentStatus: 0
-    _label: Guard
+    _label: Nothing
   - _self: 2
     _opponent: 4
     _damage: 0
     _moveEffectApplies: 1
     _selfStatus: 0
     _opponentStatus: 0
-    _label: Guard wasted
+    _label: Wasted
   - _self: 2
     _opponent: 0
     _damage: 0
     _moveEffectApplies: 1
     _selfStatus: 0
     _opponentStatus: 0
-    _label: Guard wasted
+    _label: Wasted
   - _self: 3
     _opponent: 1
-    _damage: 1
+    _damage: 0
     _moveEffectApplies: 1
     _selfStatus: 0
     _opponentStatus: 1
@@ -94,37 +94,37 @@ MonoBehaviour:
     _opponent: 2
     _damage: 0
     _moveEffectApplies: 1
-    _selfStatus: 2
+    _selfStatus: 0
     _opponentStatus: 0
-    _label: Whiff
+    _label: Nothing
   - _self: 3
     _opponent: 3
     _damage: 0
     _moveEffectApplies: 1
-    _selfStatus: 2
+    _selfStatus: 0
     _opponentStatus: 0
-    _label: Whiff
+    _label: Nothing
   - _self: 3
     _opponent: 4
     _damage: 0
     _moveEffectApplies: 1
-    _selfStatus: 2
+    _selfStatus: 0
     _opponentStatus: 0
-    _label: Whiff
+    _label: Nothing
   - _self: 3
     _opponent: 0
     _damage: 0
     _moveEffectApplies: 1
-    _selfStatus: 2
+    _selfStatus: 0
     _opponentStatus: 0
-    _label: Whiff
+    _label: Nothing
   - _self: 4
     _opponent: 1
     _damage: 0
     _moveEffectApplies: 1
     _selfStatus: 0
     _opponentStatus: 0
-    _label: Hit while charging
+    _label: Hit while resting
   - _self: 4
     _opponent: 2
     _damage: 0

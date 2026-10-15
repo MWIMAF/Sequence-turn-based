@@ -12,48 +12,73 @@ namespace Game.Combat
         // ever affect the *next* slot, never the one that caused them.
         private readonly List<StatusInstance> _active = new List<StatusInstance>();
         private readonly List<StatusInstance> _pending = new List<StatusInstance>();
+        private readonly List<MoveDefinition> _availableActions;
 
-        public CombatantState(CombatantId id, string displayName, int maxHp, int startingStamina, int maxStamina)
+        /// <param name="usesStamina">False for enemies: their pattern is authored, so it isn't limited by stamina.</param>
+        /// <param name="availableActions">
+        /// The moves this fighter may put in a sequence (duplicates allowed, each copy usable once per turn).
+        /// Null means any move is allowed.
+        /// </param>
+        public CombatantState(CombatantId id, string displayName, CombatStats stats, bool usesStamina,
+            IEnumerable<MoveDefinition> availableActions = null)
         {
+            if (stats == null) throw new ArgumentNullException(nameof(stats));
+
             Id = id;
             DisplayName = displayName;
-            MaxHp = maxHp;
-            Hp = maxHp;
-            MaxStamina = maxStamina;
-            Stamina = Math.Min(Math.Max(0, startingStamina), maxStamina);
+            MaxHp = stats.MaxHp;
+            Hp = stats.MaxHp;
+            Attack = stats.Attack;
+            Defense = stats.Defense;
+            CritChancePercent = stats.CritChancePercent;
+            CritMultiplierPercent = stats.CritMultiplierPercent;
+            AttackBuffPercent = stats.AttackBuffPercent;
+            UsesStamina = usesStamina;
+            MaxStamina = usesStamina ? stats.MaxStamina : 0;
+            Stamina = usesStamina ? Math.Min(stats.StartingStamina, stats.MaxStamina) : 0;
+            _availableActions = availableActions != null ? new List<MoveDefinition>(availableActions) : null;
         }
 
         public CombatantId Id { get; }
         public string DisplayName { get; }
         public int MaxHp { get; }
         public int Hp { get; private set; }
+        public int Attack { get; }
+        public int Defense { get; }
+        public int CritChancePercent { get; }
+        public int CritMultiplierPercent { get; }
+        public int AttackBuffPercent { get; }
+        public bool UsesStamina { get; }
         public int MaxStamina { get; }
         public int Stamina { get; private set; }
         public bool IsDefeated => Hp <= 0;
 
+        /// <summary>Moves allowed in a sequence, or null for "anything".</summary>
+        public IReadOnlyList<MoveDefinition> AvailableActions => _availableActions;
+
         /// <summary>Statuses affecting the current or next slot to resolve.</summary>
         public IReadOnlyList<StatusInstance> ActiveStatuses => _active;
 
-        /// <summary>Statuses caused this slot that switch on when it ends.</summary>
-        public IReadOnlyList<StatusInstance> PendingStatuses => _pending;
-
         public bool HasActive(StatusType type) => Find(_active, type) != null;
-
-        /// <summary>True if the status is active now or will be from the next slot.</summary>
-        public bool HasActiveOrPending(StatusType type) => HasActive(type) || Find(_pending, type) != null;
 
         internal void ApplyDamage(int amount)
         {
-            if (amount <= 0)
-            {
-                return;
-            }
-
+            if (amount <= 0) return;
             Hp = Math.Max(0, Hp - amount);
+        }
+
+        /// <summary>Restores HP up to the max and returns how much was actually healed.</summary>
+        internal int Heal(int amount)
+        {
+            if (amount <= 0 || IsDefeated) return 0;
+            int before = Hp;
+            Hp = Math.Min(MaxHp, Hp + amount);
+            return Hp - before;
         }
 
         internal void SpendStamina(int amount)
         {
+            if (!UsesStamina || amount <= 0) return;
             if (amount > Stamina)
             {
                 throw new InvalidOperationException($"{DisplayName} cannot spend {amount} stamina with only {Stamina}.");
@@ -65,11 +90,7 @@ namespace Game.Combat
         /// <summary>Adds stamina up to the cap and returns how much was actually gained.</summary>
         internal int GainStamina(int amount)
         {
-            if (amount <= 0)
-            {
-                return 0;
-            }
-
+            if (!UsesStamina || amount <= 0) return 0;
             int before = Stamina;
             Stamina = Math.Min(MaxStamina, Stamina + amount);
             return Stamina - before;
@@ -77,10 +98,7 @@ namespace Game.Combat
 
         internal void QueueStatus(StatusType type, int durationSlots)
         {
-            if (type == StatusType.None || durationSlots <= 0)
-            {
-                return;
-            }
+            if (type == StatusType.None || durationSlots <= 0) return;
 
             var existing = Find(_pending, type);
             if (existing != null)
@@ -92,9 +110,7 @@ namespace Game.Combat
             _pending.Add(new StatusInstance(type, durationSlots));
         }
 
-        /// <summary>
-        /// Called once a slot has resolved: active statuses count down, and ones reaching 0 are removed.
-        /// </summary>
+        /// <summary>Called once a slot has resolved: active statuses count down; ones reaching 0 are removed.</summary>
         internal List<StatusType> TickActiveStatuses()
         {
             var expired = new List<StatusType>();
@@ -149,15 +165,13 @@ namespace Game.Combat
         {
             foreach (var status in list)
             {
-                if (status.Type == type)
-                {
-                    return status;
-                }
+                if (status.Type == type) return status;
             }
 
             return null;
         }
 
-        public override string ToString() => $"{DisplayName} HP {Hp}/{MaxHp} STA {Stamina}/{MaxStamina}";
+        public override string ToString() =>
+            UsesStamina ? $"{DisplayName} HP {Hp}/{MaxHp} STA {Stamina}/{MaxStamina}" : $"{DisplayName} HP {Hp}/{MaxHp}";
     }
 }

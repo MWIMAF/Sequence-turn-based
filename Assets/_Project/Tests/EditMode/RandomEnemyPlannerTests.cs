@@ -4,6 +4,7 @@ using NUnit.Framework;
 
 namespace Game.Combat.Tests
 {
+    /// <summary>The random autopilot the simulator uses for the player.</summary>
     public sealed class RandomEnemyPlannerTests
     {
         [Test]
@@ -12,29 +13,29 @@ namespace Game.Combat.Tests
             using (var a = new TestWorld())
             using (var b = new TestWorld())
             {
-                var plannerA = new RandomEnemyPlanner(a.AllMoves, a.Balance);
-                var plannerB = new RandomEnemyPlanner(b.AllMoves, b.Balance);
+                var plannerA = new RandomEnemyPlanner(null, a.Balance);
+                var plannerB = new RandomEnemyPlanner(null, b.Balance);
 
                 for (int i = 0; i < 20; i++)
                 {
-                    Assert.That(plannerB.Plan(b.State, CombatantId.Enemy).ToString(),
-                        Is.EqualTo(plannerA.Plan(a.State, CombatantId.Enemy).ToString()));
+                    Assert.That(plannerB.Plan(b.State, CombatantId.Player).ToString(),
+                        Is.EqualTo(plannerA.Plan(a.State, CombatantId.Player).ToString()));
                 }
             }
         }
 
         [Test]
-        public void Plans_AreAlwaysValid_ForEveryStaminaLevel()
+        public void PlayerPlans_AreAlwaysValid_ForEveryStaminaLevel()
         {
             for (int stamina = 0; stamina <= 10; stamina++)
             {
-                using (var w = new TestWorld(startingStamina: stamina))
+                using (var w = new TestWorld(stamina: stamina))
                 {
-                    var planner = new RandomEnemyPlanner(w.AllMoves, w.Balance);
+                    var planner = new RandomEnemyPlanner(null, w.Balance);
                     for (int i = 0; i < 50; i++)
                     {
-                        var plan = planner.Plan(w.State, CombatantId.Enemy);
-                        var result = SequenceValidator.Validate(plan, w.Enemy, w.Balance);
+                        var plan = planner.Plan(w.State, CombatantId.Player);
+                        var result = SequenceValidator.Validate(plan, w.Player, w.Balance);
                         Assert.That(result.IsValid, Is.True, $"stamina {stamina}: {plan} → {result.Message}");
                     }
                 }
@@ -42,15 +43,16 @@ namespace Game.Combat.Tests
         }
 
         [Test]
-        public void Planner_NeverPicksIdle_WhenAFreeMoveExists()
+        public void PlayerPlans_NeverRepeatASingleLoadoutAction()
         {
-            using (var w = new TestWorld(startingStamina: 0))
+            using (var w = new TestWorld(stamina: 10))
             {
-                var planner = new RandomEnemyPlanner(w.AllMoves, w.Balance);
-                for (int i = 0; i < 50; i++)
+                var planner = new RandomEnemyPlanner(null, w.Balance);
+                for (int i = 0; i < 100; i++)
                 {
-                    var plan = planner.Plan(w.State, CombatantId.Enemy);
-                    Assert.That(Enumerable.Range(0, plan.Count).All(s => plan[s].Type != MoveType.Idle), Is.True);
+                    var plan = planner.Plan(w.State, CombatantId.Player);
+                    var moves = Enumerable.Range(0, plan.Count).Select(s => plan[s]).Where(m => m.Type != MoveType.Idle).ToList();
+                    Assert.That(moves.Distinct().Count(), Is.EqualTo(moves.Count), plan.ToString());
                 }
             }
         }

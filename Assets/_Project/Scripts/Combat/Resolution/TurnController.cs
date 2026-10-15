@@ -66,7 +66,7 @@ namespace Game.Combat
             SequenceValidator.Validate(playerSequence, State.Player, _balance);
 
         /// <summary>
-        /// Validates the player's sequence. If valid, both sides pay stamina and the whole turn resolves.
+        /// Validates the player's sequence. If valid, stamina is paid and the whole turn resolves.
         /// If not, nothing changes and the controller stays in Planning.
         /// </summary>
         public LockInResult LockIn(Sequence playerSequence)
@@ -125,7 +125,7 @@ namespace Game.Combat
         private void PayForSequence(CombatantState who, Sequence sequence, List<CombatEvent> events)
         {
             int cost = sequence.TotalStaminaCost;
-            if (cost <= 0)
+            if (!who.UsesStamina || cost <= 0)
             {
                 return;
             }

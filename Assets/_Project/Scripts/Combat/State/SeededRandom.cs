@@ -7,7 +7,7 @@ namespace Game.Combat
     /// which System.Random does not guarantee. Never use UnityEngine.Random inside Game.Combat.
     /// </summary>
     /// <remarks>
-    /// Clash resolution never rolls dice. This RNG is only for things like enemy planning.
+    /// Clash outcomes never roll dice. This RNG is used for crit rolls and test autopilots.
     /// </remarks>
     public sealed class SeededRandom
     {
