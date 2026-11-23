@@ -17,18 +17,6 @@ namespace Game.Combat
                     $"Sequence has {count} slots; it needs {balance.SlotCount}.");
             }
 
-            if (!balance.AllowEmptySlots)
-            {
-                for (int slot = 0; slot < sequence.Count; slot++)
-                {
-                    if (Sequence.IsEmptySlot(sequence[slot]))
-                    {
-                        return new SequenceValidationResult(
-                            SequenceValidationError.EmptySlotNotAllowed, $"Slot {slot + 1} is empty.");
-                    }
-                }
-            }
-
             var unavailable = FindUnavailableAction(sequence, owner.AvailableActions);
             if (unavailable != null)
             {
@@ -45,6 +33,20 @@ namespace Game.Combat
                 return new SequenceValidationResult(
                     SequenceValidationError.NotEnoughStamina,
                     $"Sequence costs {cost} stamina; {owner.DisplayName} has {owner.Stamina}.");
+            }
+
+            // Checked last, so a half-built plan still reports cost and availability problems first.
+            // Only fighters with a loadout must fill every slot; an enemy pattern's gaps play as Idle.
+            if (!balance.AllowEmptySlots && owner.AvailableActions != null)
+            {
+                for (int slot = 0; slot < sequence.Count; slot++)
+                {
+                    if (Sequence.IsEmptySlot(sequence[slot]))
+                    {
+                        return new SequenceValidationResult(
+                            SequenceValidationError.EmptySlotNotAllowed, $"Slot {slot + 1} is empty.");
+                    }
+                }
             }
 
             return SequenceValidationResult.Valid;

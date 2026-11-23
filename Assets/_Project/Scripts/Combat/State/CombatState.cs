@@ -14,7 +14,6 @@ namespace Game.Combat
             Player = player ?? throw new ArgumentNullException(nameof(player));
             Enemy = enemy ?? throw new ArgumentNullException(nameof(enemy));
             EnemyTier = enemyTier;
-            Seed = seed;
             Rng = new SeededRandom(seed);
             TurnNumber = 1;
         }
@@ -25,7 +24,6 @@ namespace Game.Combat
         /// <summary>Picks the damage formula's C constant for this fight.</summary>
         public EnemyTier EnemyTier { get; }
 
-        public int Seed { get; }
         public SeededRandom Rng { get; }
         public int TurnNumber { get; private set; }
 
@@ -43,8 +41,6 @@ namespace Game.Combat
         public bool IsOver => Outcome != CombatOutcome.Ongoing;
 
         public CombatantState Get(CombatantId id) => id == CombatantId.Player ? Player : Enemy;
-
-        public CombatantState OpponentOf(CombatantId id) => id == CombatantId.Player ? Enemy : Player;
 
         internal void AdvanceTurn() => TurnNumber++;
 

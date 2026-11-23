@@ -26,7 +26,7 @@ namespace Game.Combat
         [Tooltip("Staggered: extra damage taken, as a percent of the hit. GDD: 30.")]
         [SerializeField, Min(0)] private int _staggerDamageBonusPercent = 30;
 
-        [Tooltip("How many following slots Staggered lasts.")]
+        [Tooltip("How many following slots Staggered lasts. Each one cancels that slot's move.")]
         [SerializeField, Min(1)] private int _staggeredDurationSlots = 1;
 
         [Tooltip("If true, a Stagger caused in the last slot carries into slot 1 of the next turn.")]

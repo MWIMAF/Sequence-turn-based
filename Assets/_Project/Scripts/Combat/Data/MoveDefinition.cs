@@ -28,7 +28,6 @@ namespace Game.Combat
         [Tooltip("HP restored when this move resolves (Utility). Capped at max HP.")]
         [SerializeField, Min(0)] private int _heal;
 
-        [SerializeField] private string[] _tags = Array.Empty<string>();
         [SerializeField] private Sprite _icon;
 
         public string Id => string.IsNullOrEmpty(_id) ? name : _id;
@@ -40,8 +39,6 @@ namespace Game.Combat
         public int StaminaGain => _staminaGain;
         public int Heal => _heal;
         public Sprite Icon => _icon;
-
-        public bool HasTag(string tag) => Array.IndexOf(_tags, tag) >= 0;
 
         /// <summary>
         /// Builds an in-memory move. For tests and editor tooling; gameplay should use authored assets.

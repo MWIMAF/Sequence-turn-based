@@ -21,15 +21,8 @@ namespace Game.Combat
             _state = seed == 0 ? ZeroSeedReplacement : unchecked((uint)seed);
         }
 
-        /// <summary>Current internal state, so a fight can be saved and restored exactly.</summary>
+        /// <summary>Current internal state (tests use it to prove nothing consumed a roll).</summary>
         public uint State => _state;
-
-        public static SeededRandom FromState(uint state)
-        {
-            var rng = new SeededRandom(1);
-            rng._state = state == 0 ? ZeroSeedReplacement : state;
-            return rng;
-        }
 
         public uint NextUInt()
         {

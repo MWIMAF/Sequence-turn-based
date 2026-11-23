@@ -93,6 +93,13 @@ namespace Game.Presentation
             }
 
             _actions = _player.GetActions();
+            if (!_balance.AllowEmptySlots && _balance.PassiveStaminaRegenPerTurn == 0 &&
+                _actions.Count(a => a.Move.StaminaCost == 0) < _balance.SlotCount)
+            {
+                Debug.LogWarning("[BattleController] Empty slots are off, there's no stamina regen, and fewer free actions " +
+                                 "than slots: at 0 stamina the player can't fill a sequence and gets stuck.", this);
+            }
+
             _ui = BattleScreen.Build(transform, _balance.SlotCount, _actions);
             WireButtons();
             StartNewFight();
@@ -306,7 +313,7 @@ namespace Game.Presentation
                 bool used = Array.IndexOf(_planned, i) >= 0;
                 var button = _ui.MoveButtons[i];
                 button.SetUsed(used);
-                button.SetAvailable(!used && firstEmpty >= 0 && button.Move.StaminaCost <= remaining);
+                button.SetAvailable(CanAdd(i));
             }
 
             var validation = _turns.Validate(PlannedSequence());
@@ -332,12 +339,13 @@ namespace Game.Presentation
                 "It repeats a fixed pattern.\nLearn it!";
         }
 
-        /// <summary>A Stagger carried over from last turn affects slot 1. Show that before the player commits.</summary>
+        /// <summary>A Stagger carried over from last turn affects the first slot(s). Show that before the player commits.</summary>
         private void ShowCarriedStatusBadge(SlotCard card, CombatantState who, int slot)
         {
-            if (slot == 0 && who.HasActive(StatusType.Staggered))
+            var stagger = who.ActiveStatuses.FirstOrDefault(s => s.Type == StatusType.Staggered);
+            if (stagger != null && slot < stagger.SlotsRemaining)
             {
-                card.SetBadge($"STAGGERED · +{_balance.StaggerDamageBonusPercent}% dmg taken", UiPalette.Warning);
+                card.SetBadge($"STAGGERED · move canceled, +{_balance.StaggerDamageBonusPercent}% dmg taken", UiPalette.Warning);
             }
             else
             {
@@ -347,14 +355,26 @@ namespace Game.Presentation
 
         private void AddAction(int actionIndex)
         {
-            if (_mode != Mode.Planning || actionIndex < 0 || actionIndex >= _actions.Count) return;
-            if (Array.IndexOf(_planned, actionIndex) >= 0) return;
+            if (_mode != Mode.Planning || actionIndex < 0 || actionIndex >= _actions.Count || !CanAdd(actionIndex)) return;
 
-            int slot = Array.IndexOf(_planned, EmptySlot);
-            if (slot < 0 || _actions[actionIndex].Move.StaminaCost > _state.Player.Stamina - PlannedCost()) return;
-
-            _planned[slot] = actionIndex;
+            _planned[Array.IndexOf(_planned, EmptySlot)] = actionIndex;
             RefreshPlanning();
+        }
+
+        /// <summary>
+        /// Whether this action can go in the next empty slot. The rules come from the validator;
+        /// the only UI rule is that each button (one body part) is placed once.
+        /// </summary>
+        private bool CanAdd(int actionIndex)
+        {
+            int slot = Array.IndexOf(_planned, EmptySlot);
+            if (slot < 0 || Array.IndexOf(_planned, actionIndex) >= 0) return false;
+
+            var moves = PlannedMoves();
+            moves[slot] = _actions[actionIndex].Move;
+            var check = _turns.Validate(new Sequence(moves));
+            // A half-built plan is fine here; it only has to be full at lock-in.
+            return check.IsValid || check.Error == SequenceValidationError.EmptySlotNotAllowed;
         }
 
         private void ClearSlot(int slot)
@@ -385,8 +405,10 @@ namespace Game.Presentation
 
         private int PlannedCost() => _planned.Where(p => p != EmptySlot).Sum(p => _actions[p].Move.StaminaCost);
 
-        private Sequence PlannedSequence() =>
-            new Sequence(_planned.Select(p => p == EmptySlot ? null : _actions[p].Move).ToArray());
+        private MoveDefinition[] PlannedMoves() =>
+            _planned.Select(p => p == EmptySlot ? null : _actions[p].Move).ToArray();
+
+        private Sequence PlannedSequence() => new Sequence(PlannedMoves());
 
         private void LockIn()
         {
@@ -473,7 +495,7 @@ namespace Game.Presentation
                             applied.Status.ToString().ToUpperInvariant(), UiPalette.ForStatus(applied.Status), 30);
                         Log($"S{applied.Slot + 1}: {Who(applied.Who)} {(applied.Who == CombatantId.Player ? "are" : "is")} " +
                             $"<color=#{UiPalette.ToHex(UiPalette.ForStatus(applied.Status))}>{applied.Status}</color> " +
-                            $"(+{_balance.StaggerDamageBonusPercent}% dmg next slot).");
+                            $"(next {applied.DurationSlots} move(s) canceled, +{_balance.StaggerDamageBonusPercent}% dmg taken).");
                         yield return Wait(_beatSeconds * 0.6f);
                         break;
 
