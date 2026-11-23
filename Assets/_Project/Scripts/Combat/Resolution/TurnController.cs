@@ -25,8 +25,6 @@ namespace Game.Combat
             _resolver = new SequenceResolver(table, balance);
         }
 
-        public event Action<TurnPhase> PhaseChanged;
-
         public CombatState State { get; }
         public TurnPhase Phase { get; private set; } = TurnPhase.NotStarted;
 
@@ -46,11 +44,11 @@ namespace Game.Combat
 
             var events = new List<CombatEvent>();
 
-            SetPhase(TurnPhase.TurnStart);
+            Phase = TurnPhase.TurnStart;
             RegenerateStamina(State.Player, events);
             RegenerateStamina(State.Enemy, events);
 
-            SetPhase(TurnPhase.Planning);
+            Phase = TurnPhase.Planning;
             EnemyPlan = _enemyPlanner.Plan(State, CombatantId.Enemy);
             var enemyCheck = SequenceValidator.Validate(EnemyPlan, State.Enemy, _balance);
             if (!enemyCheck.IsValid)
@@ -79,15 +77,15 @@ namespace Game.Combat
                 return LockInResult.Rejected(validation);
             }
 
-            SetPhase(TurnPhase.LockIn);
+            Phase = TurnPhase.LockIn;
             var events = new List<CombatEvent>();
             PayForSequence(State.Player, playerSequence, events);
             PayForSequence(State.Enemy, EnemyPlan, events);
 
-            SetPhase(TurnPhase.Resolution);
+            Phase = TurnPhase.Resolution;
             events.AddRange(_resolver.Resolve(State, playerSequence, EnemyPlan));
 
-            SetPhase(TurnPhase.Playback);
+            Phase = TurnPhase.Playback;
             return LockInResult.Resolved(events);
         }
 
@@ -96,13 +94,13 @@ namespace Game.Combat
         {
             RequirePhase(TurnPhase.Playback);
 
-            SetPhase(TurnPhase.TurnEnd);
+            Phase = TurnPhase.TurnEnd;
             var events = _resolver.EndTurn(State);
             EnemyPlan = null;
 
             if (State.IsOver)
             {
-                SetPhase(TurnPhase.CombatOver);
+                Phase = TurnPhase.CombatOver;
             }
             else
             {
@@ -133,12 +131,6 @@ namespace Game.Combat
             who.SpendStamina(cost);
             events.Add(new StaminaChangedEvent(
                 State.TurnNumber, who.Id, -cost, who.Stamina, StaminaChangeReason.SequenceCost));
-        }
-
-        private void SetPhase(TurnPhase phase)
-        {
-            Phase = phase;
-            PhaseChanged?.Invoke(phase);
         }
 
         private void RequirePhase(params TurnPhase[] allowed)

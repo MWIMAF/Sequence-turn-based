@@ -128,6 +128,31 @@ namespace Game.Combat.Tests
         }
 
         [Test]
+        public void EnemyPatternGaps_PlayAsIdle_EvenWhenBalanceDisallowsEmptySlots()
+        {
+            using (var w = new TestWorld(allowEmptySlots: false))
+            {
+                var controller = w.Controller(Seq(w.Slash, null, w.Rest));
+
+                Assert.DoesNotThrow(() => controller.BeginTurn());
+            }
+        }
+
+        [Test]
+        public void HalfBuiltPlan_ReportsStaminaBeforeEmptySlots()
+        {
+            using (var w = new TestWorld(stamina: 1, allowEmptySlots: false))
+            {
+                var controller = w.Controller(Seq(w.Slash, w.Slash, w.Slash));
+                controller.BeginTurn();
+
+                var result = controller.Validate(Seq(w.Slash, null, null));
+
+                Assert.That(result.Error, Is.EqualTo(SequenceValidationError.NotEnoughStamina));
+            }
+        }
+
+        [Test]
         public void LockIn_RejectsTheWrongNumberOfSlots()
         {
             using (var w = new TestWorld())

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Game.Combat;
 using UnityEngine;
 
@@ -29,21 +28,6 @@ namespace Game.Presentation
         public EnemyTier Tier => _tier;
         public CombatStats Stats => _stats;
         public EnemyPattern Pattern => _pattern;
-
-        /// <summary>Every distinct move the pattern uses, for tooling.</summary>
-        public List<MoveDefinition> PatternMoves()
-        {
-            var moves = new List<MoveDefinition>();
-            foreach (var turn in _pattern.Turns)
-            {
-                foreach (var move in turn.Slots)
-                {
-                    if (move != null && !moves.Contains(move)) moves.Add(move);
-                }
-            }
-
-            return moves;
-        }
 
         /// <summary>Overwrites every value. Used by the editor content builder.</summary>
         public void Configure(string displayName, EnemyTier tier, CombatStats stats, EnemyPattern pattern)

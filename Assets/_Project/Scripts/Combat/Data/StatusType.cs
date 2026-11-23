@@ -8,7 +8,8 @@ namespace Game.Combat
         None = 0,
 
         /// <summary>
-        /// Takes extra damage (BalanceConfig.StaggerDamageBonusPercent) in the next slot. Caused by getting parried.
+        /// Caused by getting parried. In the next slot the fighter's move is canceled (plays as Idle)
+        /// and they take extra damage (BalanceConfig.StaggerDamageBonusPercent).
         /// </summary>
         Staggered = 1,
     }

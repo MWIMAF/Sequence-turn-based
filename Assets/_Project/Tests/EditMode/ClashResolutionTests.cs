@@ -66,12 +66,25 @@ namespace Game.Combat.Tests
 
             int staggered = SlashHit * (100 + StaggerPercent) / 100; // 13
             var slot2 = Clash(events, 1);
-            Assert.That(slot2.Enemy.MoveType, Is.EqualTo(MoveType.Idle), "Stagger doesn't cancel moves any more.");
+            Assert.That(slot2.Enemy.MoveType, Is.EqualTo(MoveType.Idle));
             Assert.That(slot2.Enemy.DamageTaken, Is.EqualTo(staggered));
             Assert.That(slot2.Enemy.StaggerBonusTaken, Is.EqualTo(staggered - SlashHit));
 
             Assert.That(Clash(events, 2).Enemy.DamageTaken, Is.EqualTo(SlashHit), "Stagger lasts one slot.");
             Assert.That(events.OfType<StatusExpiredEvent>().Single().Slot, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Staggered_HasItsNextMoveCanceled_SoTheParrierGetsAFreeHit()
+        {
+            // The enemy's Kick is parried, so its planned Parry in slot 2 never happens and the Slash lands.
+            var events = _w.Resolve(Seq(_w.Parry, _w.Slash, null), Seq(_w.Kick, _w.Parry, null));
+
+            var slot2 = Clash(events, 1);
+            Assert.That(slot2.Enemy.MoveType, Is.EqualTo(MoveType.Idle));
+            Assert.That(slot2.Enemy.Label, Is.EqualTo("Staggered: Parry canceled"));
+            Assert.That(slot2.Enemy.DamageTaken, Is.EqualTo(SlashHit * (100 + StaggerPercent) / 100));
+            Assert.That(events.OfType<StatusAppliedEvent>().Count(), Is.EqualTo(1), "A canceled Parry can't stagger back.");
         }
 
         [Test]

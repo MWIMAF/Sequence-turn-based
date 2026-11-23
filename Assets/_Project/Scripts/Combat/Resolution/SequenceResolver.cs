@@ -76,8 +76,9 @@ namespace Game.Combat
             var enemy = state.Enemy;
             int defenseConstant = _balance.DefenseConstantFor(state.EnemyTier);
 
-            var playerMove = Sequence.IsEmptySlot(playerPlanned) ? _balance.IdleMove : playerPlanned;
-            var enemyMove = Sequence.IsEmptySlot(enemyPlanned) ? _balance.IdleMove : enemyPlanned;
+            // A Staggered fighter's move is canceled: the slot plays as Idle, so the opponent gets a free hit.
+            var playerMove = Resolved(player, playerPlanned);
+            var enemyMove = Resolved(enemy, enemyPlanned);
 
             // 1. Each side's rule says what its own move does to the other.
             var playerRule = _table.Get(playerMove.Type, enemyMove.Type);
@@ -97,10 +98,10 @@ namespace Game.Combat
             int enemyHealed = enemyRule.MoveEffectApplies ? enemy.Heal(enemyMove.Heal) : 0;
 
             events.Add(new ClashResolvedEvent(turn, slot,
-                new SlotOutcome(CombatantId.Player, playerMove, enemyMove.Type, playerRule.Label,
+                new SlotOutcome(CombatantId.Player, playerMove, enemyMove.Type, Label(player, playerPlanned, playerRule),
                     toEnemy.Total, toEnemy.IsCrit, toPlayer.Total, toPlayer.StaggerBonus,
                     playerHealed, playerGain, player.Hp, player.Stamina),
-                new SlotOutcome(CombatantId.Enemy, enemyMove, playerMove.Type, enemyRule.Label,
+                new SlotOutcome(CombatantId.Enemy, enemyMove, playerMove.Type, Label(enemy, enemyPlanned, enemyRule),
                     toPlayer.Total, toPlayer.IsCrit, toEnemy.Total, toEnemy.StaggerBonus,
                     enemyHealed, enemyGain, enemy.Hp, enemy.Stamina)));
 
@@ -126,6 +127,15 @@ namespace Game.Combat
             {
                 events.Add(new CombatantDefeatedEvent(turn, slot, CombatantId.Enemy));
             }
+        }
+
+        private MoveDefinition Resolved(CombatantState who, MoveDefinition planned) =>
+            Sequence.IsEmptySlot(planned) || who.HasActive(StatusType.Staggered) ? _balance.IdleMove : planned;
+
+        private static string Label(CombatantState who, MoveDefinition planned, InteractionRule rule)
+        {
+            if (!who.HasActive(StatusType.Staggered)) return rule.Label;
+            return Sequence.IsEmptySlot(planned) ? "Staggered" : $"Staggered: {planned.DisplayName} canceled";
         }
 
         private DamageResult ComputeDamage(CombatState state, CombatantState attacker, CombatantState target,
