@@ -36,6 +36,14 @@ namespace Game.UI
             UiFactory.Place(name.rectTransform, new Vector2(0f, 4f), new Vector2(inner, 32f));
             UiFactory.AddShadow(name);
 
+            if (move.Icon != null)
+            {
+                var icon = UiFactory.Panel("Icon", rt, Color.white, rounded: false);
+                icon.sprite = move.Icon;
+                icon.preserveAspect = true;
+                UiFactory.Place(icon.rectTransform, new Vector2(size.x / 2f - 32f, 4f), new Vector2(44f, 44f));
+            }
+
             var info = UiFactory.Label("Info", rt, MoveText.Summary(move), 14, UiPalette.Text, TextAnchor.MiddleLeft);
             UiFactory.Place(info.rectTransform, new Vector2(0f, -30f), new Vector2(inner, 34f));
             UiFactory.AddShadow(info);

@@ -55,6 +55,7 @@ MonoBehaviour:
     _attackBuffPercent: 0
     _maxStamina: 8
     _startingStamina: 4
+  _portrait: {fileID: 21300000, guid: 590213f3b5c162541b79b0c9d2be9484, type: 3}
   _pattern:
     _turns:
     - _label: Guarded opener

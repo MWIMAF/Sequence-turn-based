@@ -16,4 +16,4 @@ MonoBehaviour:
   _slot: 1
   _actions:
   - {fileID: 11400000, guid: 475916abb991448ccbdf2e4c7d4ca474, type: 2}
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 0902bffd62280934aa326dfa2e88a791, type: 3}

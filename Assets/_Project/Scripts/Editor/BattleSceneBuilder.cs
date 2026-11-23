@@ -154,7 +154,9 @@ namespace Game.Editor
                 SceneManager.MoveGameObjectToScene(cameraGo, scene);
 
                 var battleGo = new GameObject("Battle");
-                battleGo.AddComponent<BattleController>().Configure(balance, table, player, enemies);
+                var controller = battleGo.AddComponent<BattleController>();
+                controller.Configure(balance, table, player, enemies);
+                ArtLinker.LinkBattleController(controller);
                 SceneManager.MoveGameObjectToScene(battleGo, scene);
 
                 if (!EditorSceneManager.SaveScene(scene, ScenePath))

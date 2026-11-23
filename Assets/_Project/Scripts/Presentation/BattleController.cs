@@ -49,6 +49,12 @@ namespace Game.Presentation
         [Tooltip("How much of the enemy's plan the player sees while planning. Also switchable in play (T).")]
         [SerializeField] private TelegraphMode _telegraph = TelegraphMode.Hidden;
 
+        [Header("Art (Sequence > Link Art fills these; empty = no effect)")]
+        [SerializeField] private Sprite _hitVfx;
+        [SerializeField] private Sprite _slashVfx;
+        [SerializeField] private Sprite _parryVfx;
+        [SerializeField] private Sprite _staggeredIcon;
+
         [Header("Playback pacing (seconds, presentation only)")]
         [SerializeField, Min(0.1f)] private float _clashSeconds = 1.3f;
         [SerializeField, Min(0f)] private float _beatSeconds = 0.45f;
@@ -227,6 +233,8 @@ namespace Game.Presentation
             _ui.Overlay.SetActive(false);
             _ui.SeedText.text = $"seed {_fightSeed}";
             _ui.PlayerPanel.SetName(_state.Player.DisplayName);
+            _ui.PlayerPanel.SetPortrait(_player.Portrait);
+            _ui.EnemyPanel.SetPortrait(_enemy.Portrait);
             _ui.PlayerPanel.SetStatsLine(StatsLine(_player.Stats));
             _ui.EnemyPanel.SetName(_state.Enemy.DisplayName);
             _ui.EnemyPanel.SetStatsLine($"{_enemy.Tier.ToString().ToUpperInvariant()}  ·  {StatsLine(_enemy.Stats)}");
@@ -491,6 +499,8 @@ namespace Game.Presentation
 
                     case StatusAppliedEvent applied:
                         AddStatus(applied.Who, applied.Status);
+                        Burst(applied.Who, _parryVfx, 240f);
+                        Burst(applied.Who, _staggeredIcon, 110f);
                         Float(Panel(applied.Who).HpPosition + new Vector2(0f, 42f),
                             applied.Status.ToString().ToUpperInvariant(), UiPalette.ForStatus(applied.Status), 30);
                         Log($"S{applied.Slot + 1}: {Who(applied.Who)} {(applied.Who == CombatantId.Player ? "are" : "is")} " +
@@ -598,6 +608,8 @@ namespace Game.Presentation
 
             if (outcome.DamageTaken > 0)
             {
+                Burst(who, _slashVfx, 220f);
+                Burst(who, _hitVfx, hitByCrit ? 200f : 150f);
                 string text = $"-{outcome.DamageTaken}";
                 if (hitByCrit) text = "CRIT " + text;
                 if (outcome.StaggerBonusTaken > 0) text += $"  (Stagger +{outcome.StaggerBonusTaken})";
@@ -745,6 +757,11 @@ namespace Game.Presentation
                 elapsed += Time.deltaTime * _speed * (_fastForward ? FastForwardMultiplier : 1f);
                 yield return null;
             }
+        }
+
+        private void Burst(CombatantId who, Sprite sprite, float size)
+        {
+            if (sprite != null) FloatingText.SpawnSprite(_ui.FxLayer, Panel(who).PortraitPosition, sprite, size);
         }
 
         private void Float(Vector2 position, string text, Color color, int size) =>

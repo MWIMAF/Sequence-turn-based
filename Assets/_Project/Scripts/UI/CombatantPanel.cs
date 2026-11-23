@@ -14,16 +14,21 @@ namespace Game.UI
         private Text _name;
         private Text _statsLine;
         private Text _statuses;
+        private Image _portrait;
         private StatBar _hp;
         private StatBar _stamina;
         private Vector2 _hpPosition;
         private Vector2 _staminaPosition;
+        private Vector2 _portraitPosition;
 
         /// <summary>Where to spawn damage numbers, in the panel's parent space.</summary>
         public Vector2 HpPosition => _hpPosition;
 
         /// <summary>Where to spawn stamina numbers, in the panel's parent space.</summary>
         public Vector2 StaminaPosition => _staminaPosition;
+
+        /// <summary>Centre of the portrait (where hit and parry effects play), in the panel's parent space.</summary>
+        public Vector2 PortraitPosition => _portraitPosition;
 
         public static CombatantPanel Create(Transform parent, string name, Vector2 position, Vector2 size, Color accent,
             bool showStamina)
@@ -53,12 +58,26 @@ namespace Game.UI
             panel._statuses = UiFactory.Label("Statuses", rt, string.Empty, 18, UiPalette.Text, TextAnchor.MiddleRight, FontStyle.Bold);
             UiFactory.Place(panel._statuses.rectTransform, new Vector2(size.x / 2f - 115f, 0f), new Vector2(200f, size.y - 10f));
 
+            // Sits in the free strip left of the panel; hidden until a portrait is set.
+            var portraitLocal = new Vector2(-size.x / 2f - 100f, -10f);
+            panel._portrait = UiFactory.Panel("Portrait", rt, Color.white, rounded: false);
+            panel._portrait.preserveAspect = true;
+            UiFactory.Place(panel._portrait.rectTransform, portraitLocal, new Vector2(160f, 160f));
+            panel._portrait.gameObject.SetActive(false);
+
+            panel._portraitPosition = position + portraitLocal;
             panel._hpPosition = position + hpLocal;
             panel._staminaPosition = position + staminaLocal;
             return panel;
         }
 
         public void SetName(string displayName) => _name.text = displayName;
+
+        public void SetPortrait(Sprite portrait)
+        {
+            _portrait.sprite = portrait;
+            _portrait.gameObject.SetActive(portrait != null);
+        }
 
         public void SetStatsLine(string text) => _statsLine.text = text;
 

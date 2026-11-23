@@ -155,6 +155,10 @@ MonoBehaviour:
   - {fileID: 7593059657544883728, guid: 7d9a5e2a4f17e4fd28cda40db2d2e8a5, type: 3}
   _seed: 0
   _telegraph: 0
+  _hitVfx: {fileID: 21300000, guid: 5f944c13837428643b3e3663ad94b6d7, type: 3}
+  _slashVfx: {fileID: 21300000, guid: ff7d4aa7b63dd3e42a501b6f0369dffd, type: 3}
+  _parryVfx: {fileID: 21300000, guid: de948c95214790e479a953afbde81a0c, type: 3}
+  _staggeredIcon: {fileID: 21300000, guid: 82694ab1b9441db4bbadcb67014c5add, type: 3}
   _clashSeconds: 1.3
   _beatSeconds: 0.45
 --- !u!4 &2025826807

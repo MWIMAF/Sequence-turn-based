@@ -20,5 +20,4 @@ MonoBehaviour:
   _skillPower: 0
   _staminaGain: 5
   _heal: 0
-  _tags: []
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: ce32572f7c044124c8d624a4f792a25b, type: 3}

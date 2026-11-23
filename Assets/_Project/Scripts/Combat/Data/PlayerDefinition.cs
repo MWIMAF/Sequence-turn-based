@@ -12,12 +12,14 @@ namespace Game.Combat
     {
         [SerializeField] private string _displayName = "You";
         [SerializeField] private CombatStats _stats = new CombatStats();
+        [SerializeField] private Sprite _portrait;
 
         [Tooltip("One entry per body part: Right Hand, Left Hand, Body, Right Leg, Left Leg.")]
         [SerializeField] private List<LoadoutSlot> _loadout = DefaultLoadout();
 
         public string DisplayName => string.IsNullOrEmpty(_displayName) ? name : _displayName;
         public CombatStats Stats => _stats;
+        public Sprite Portrait => _portrait;
         public IReadOnlyList<LoadoutSlot> Loadout => _loadout;
 
         /// <summary>The usable actions, in body-part order. Body parts with nothing usable are skipped.</summary>

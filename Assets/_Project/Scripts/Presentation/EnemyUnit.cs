@@ -21,6 +21,8 @@ namespace Game.Presentation
         [Tooltip("Stamina fields are ignored for enemies: the pattern decides what they do.")]
         [SerializeField] private CombatStats _stats = new CombatStats();
 
+        [SerializeField] private Sprite _portrait;
+
         [Tooltip("Turn 1 plays the first entry, then the next, and loops. Empty slots are Idle.")]
         [SerializeField] private EnemyPattern _pattern = new EnemyPattern();
 
@@ -28,6 +30,7 @@ namespace Game.Presentation
         public EnemyTier Tier => _tier;
         public CombatStats Stats => _stats;
         public EnemyPattern Pattern => _pattern;
+        public Sprite Portrait => _portrait;
 
         /// <summary>Overwrites every value. Used by the editor content builder.</summary>
         public void Configure(string displayName, EnemyTier tier, CombatStats stats, EnemyPattern pattern)
